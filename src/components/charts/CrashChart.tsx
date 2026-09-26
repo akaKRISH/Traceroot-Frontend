@@ -20,6 +20,13 @@ interface CrashChartProps {
   annotations?: CrashAnnotation[];
   /** §4: the 6s sweep line. Dashboard polls live; compact charts are static. */
   sweep?: boolean;
+  /**
+   * Now-anchored time window (ms). When set, the x-axis ends at the present and
+   * the series simply stops at its last sample — the live chart needs room for
+   * incidents newer than the newest metric point. Omit it and the domain follows
+   * the data, which is what the incident view's ±30min zoom wants.
+   */
+  windowMs?: number;
 }
 
 const PAD = { top: 14, right: 46, bottom: 8, left: 8 };
@@ -27,6 +34,20 @@ const Y_TICKS = [0, 0.1, 0.25, 0.5];
 const SWEEP_MS = 6000;
 const FLAG_LANE = 24;
 const FLAG_STACK = 26;
+/** Flags whose x lands in the same 6px column aggregate into one flag. */
+const FLAG_BUCKET_PX = 6;
+
+/** The live dashboard's chart window: one day ending at the present. */
+export const CHART_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Right edge of a now-anchored axis, quantised to the minute: the axis must not
+ * jitter on every animation frame (one minute ≈ 0.7px across 24h), and callers
+ * fetch exactly the incidents this domain can show.
+ */
+export function chartDomainEnd(now: number = Date.now()): number {
+  return Math.floor(now / 60_000) * 60_000;
+}
 
 // Short axis label for a timestamp depending on chart span.
 function tickLabel(t: number, spanMs: number): string {
@@ -63,44 +84,67 @@ export const CrashChart: React.FC<CrashChartProps> = ({
   showVolume = true,
   annotations,
   sweep = false,
+  windowMs,
 }) => {
   const [ref, width] = useMeasure<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const sweepPos = useSweepPosition(sweep);
 
+  // Recomputed every render, but stable within a minute: the memo below keys on
+  // the two scalars, so the 60fps sweep never re-projects the series.
+  const axis = windowMs === undefined ? null : { end: chartDomainEnd(), start: chartDomainEnd() - windowMs };
+  const axisStart = axis?.start;
+  const axisEnd = axis?.end;
+
   const geom = useMemo(() => {
     if (width <= 0 || data.length === 0) return null;
-    const t0 = data[0].t;
-    const t1 = data[data.length - 1].t;
+    // Opt-in now-anchored domain: everything (series, flags, marker, grid) is
+    // positioned by it, so a stale series simply stops short of the right edge.
+    const t0 = axisStart ?? data[0].t;
+    const t1 = axisEnd ?? data[data.length - 1].t;
     const innerW = width - PAD.left - PAD.right;
     const innerH = height - PAD.top - PAD.bottom;
     const x = scaleLinear([t0, t1], [PAD.left, PAD.left + innerW]);
     const y = scaleLinear([0, 0.5], [PAD.top + innerH, PAD.top]);
     const pts = data.map((d) => ({ x: x(d.t), y: y(Math.min(d.errorRate, 0.5)) }));
     return { t0, t1, x, y, pts, innerW, innerH, spanMs: t1 - t0 };
-  }, [width, height, data]);
+  }, [width, height, data, axisStart, axisEnd]);
 
   const marker = useMemo(() => {
     // Number.isFinite: no crashed incident → Date.parse("") = NaN must not
-    // sneak through the range guard (NaN fails every comparison).
-    if (!geom || markerT === undefined || !Number.isFinite(markerT) || markerT < geom.t0 || markerT > geom.t1) return null;
-    return { x: geom.x(markerT), t: markerT };
-  }, [geom, markerT]);
+    // sneak through. The time is clamped to the plot area, so a crash newer
+    // than the last sample pins to the right edge instead of disappearing; the
+    // label keeps the real crash time.
+    if (!geom || markerT === undefined || !Number.isFinite(markerT)) return null;
+    const right = width - PAD.right;
+    return { x: Math.min(Math.max(geom.x(markerT), PAD.left), right), t: markerT };
+  }, [geom, markerT, width]);
 
-  // §9: flags — domain-filtered, deterministic x, stacked 26px when the
-  // previous label would land within 40px. Lane height grows with stacks.
+  // §9: flags — domain-filtered, then aggregated by 6px column so a burst of
+  // live crashes reads as one flag (newest id + "+N") instead of a 30-lane
+  // stack. Deterministic x, stacked 26px when labels would overlap.
   const flags = useMemo(() => {
     if (!geom || !annotations || annotations.length === 0 || compact) return [];
-    const sorted = [...annotations].sort((a, b) => a.t - b.t);
-    const out: { a: CrashAnnotation; x: number; laneY: number }[] = [];
+    const inDomain = annotations
+      .filter((a) => a.t >= geom.t0 && a.t <= geom.t1)
+      .sort((a, b) => a.t - b.t);
+    const columns = new Map<number, CrashAnnotation[]>();
+    for (const a of inDomain) {
+      const key = Math.floor(geom.x(a.t) / FLAG_BUCKET_PX) * FLAG_BUCKET_PX;
+      const list = columns.get(key);
+      if (list) list.push(a);
+      else columns.set(key, [a]);
+    }
+    // Newest first inside a column: the flag is labelled by its newest crash.
+    const out = [...columns.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([x, items]) => ({ x, items: [...items].reverse(), laneY: 0 }));
     let lastX = -Infinity;
     let lane = 0;
-    for (const a of sorted) {
-      if (a.t < geom.t0 || a.t > geom.t1) continue;
-      const x = geom.x(a.t);
-      lane = x - lastX < 40 ? lane + 1 : 0;
-      out.push({ a, x, laneY: lane * FLAG_STACK });
-      lastX = x;
+    for (const f of out) {
+      lane = f.x - lastX < 40 ? lane + 1 : 0;
+      f.laneY = lane * FLAG_STACK;
+      lastX = f.x;
     }
     return out;
   }, [geom, annotations, compact]);
@@ -124,7 +168,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
     };
     if (marker && hit(marker.x, "marker")) return;
     for (const f of flags) {
-      if (hit(f.x, `flag-${f.a.id}`)) return;
+      if (hit(f.x, `flag-${f.items[0].id}`)) return;
     }
   }, [sweepX, marker, flags]);
   useEffect(() => {
@@ -189,33 +233,53 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 </mask>
               )}
             </defs>
-          )}
-
-          {/* §9 annotation lane — above the plot area */}
-          {flags.map(({ a, x, laneY }) => {
-            const lit = litId === `flag-${a.id}`;
+          )}          {/* §9 annotation lane — above the plot area. One flag per 6px column;
+              a column holding many crashes is labelled with the newest id and a
+              "+N" count, and its hover panel lists the five newest. */}
+          {flags.map((f) => {
+            const lead = f.items[0];
+            const extra = f.items.length - 1;
+            const label = `#${lead.id.slice(0, 4)}${extra > 0 ? ` +${extra}` : ""}`;
+            const boxW = Math.max(40, label.length * 6 + 8);
+            const listed = f.items.slice(0, 5);
+            const panelW = 148;
+            const lit = litId === `flag-${lead.id}`;
+            const boxX = Math.min(
+              Math.max(f.x - boxW / 2, PAD.left),
+              Math.max(PAD.left, width - PAD.right - boxW - 44)
+            );
             return (
-              <g key={a.id} className="flag-group">
+              <g key={lead.id} className="flag-group">
                 {/* 1px danger line down to the chart; meets the x-axis */}
-                <line x1={x} x2={x} y1={laneY + 13} y2={flagH} stroke="#ff4d4d" strokeWidth={1} />
-                <g transform={`translate(${Math.min(Math.max(x - 20, PAD.left), width - PAD.right - 84)}, ${laneY})`}>
+                <line x1={f.x} x2={f.x} y1={f.laneY + 13} y2={flagH} stroke="#ff4d4d" strokeWidth={1} />
+                <g transform={`translate(${boxX}, ${f.laneY})`}>
                   <g className="transition-opacity duration-150 ease-out" style={{ opacity: lit ? 1 : 0.92 }}>
                     {/* SVG brut shadow: ink rect offset 2,2 behind the label */}
-                    <rect x={2} y={2} width={40} height={13} fill="#0a0a0a" />
-                    <rect x={0} y={0} width={40} height={13} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
-                    <text x={20} y={10} fontSize="9" fill="#0a0a0a" textAnchor="middle" className="mono font-bold">
-                      #{a.id.slice(0, 4)}
+                    <rect x={2} y={2} width={boxW} height={13} fill="#0a0a0a" />
+                    <rect x={0} y={0} width={boxW} height={13} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
+                    <text x={boxW / 2} y={10} fontSize="9" fill="#0a0a0a" textAnchor="middle" className="mono font-bold">
+                      {label}
                     </text>
                   </g>
-                  {/* Hover expands the flag: timestamp + title, sans 12px→13px */}
-                  <g className="flag-title">
-                    <rect x={44} y={0} width={148} height={13} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
-                    <text x={48} y={10} fontSize="9" fill="rgba(10,10,10,0.55)" className="mono">
-                      {formatTime(a.t)}
-                    </text>
-                    <text x={94} y={10.5} fontSize="9" fill="#0a0a0a" className="font-semibold" style={{ fontFamily: "Inter Tight, sans-serif", letterSpacing: "-0.01em" }}>
-                      {a.title.slice(0, 18)}
-                    </text>
+                  {/* Hover expands the flag: timestamp + title, sans 12px→13px;
+                      a multi-crash column grows a row per incident (max 5). */}
+                  <g className="flag-title" transform={`translate(${boxW + 4}, 0)`}>
+                    <rect x={0} y={0} width={panelW} height={13 + (listed.length - 1) * 11} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
+                    {listed.map((a, i) => (
+                      <g key={a.id}>
+                        {listed.length > 1 && (
+                          <text x={4} y={10 + i * 11} fontSize="9" fill="#0a0a0a" className="mono font-bold">
+                            #{a.id.slice(0, 4)}
+                          </text>
+                        )}
+                        <text x={48} y={10 + i * 11} fontSize="9" fill="rgba(10, 10, 10, 0.55)" className="mono">
+                          {formatTime(a.t)}
+                        </text>
+                        <text x={94} y={10.5 + i * 11} fontSize="9" fill="#0a0a0a" className="font-semibold" style={{ fontFamily: "Inter Tight, sans-serif", letterSpacing: "-0.01em" }}>
+                          {a.title.slice(0, 18)}
+                        </text>
+                      </g>
+                    ))}
                   </g>
                 </g>
               </g>

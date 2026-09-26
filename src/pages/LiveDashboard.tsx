@@ -6,7 +6,12 @@ import { StatusBadge } from "../components/primitives/StatusBadge";
 import { SeverityBadge } from "../components/primitives/SeverityBadge";
 import { AsyncPage } from "../components/primitives/AsyncPage";
 import { SectionDivider } from "../components/primitives/SectionDivider";
-import { CrashChart, CrashAnnotation } from "../components/charts/CrashChart";
+import {
+  CrashChart,
+  CrashAnnotation,
+  CHART_WINDOW_MS,
+  chartDomainEnd,
+} from "../components/charts/CrashChart";
 import { LatencyBands } from "../components/charts/LatencyBands";
 import { ErrorHeatmap } from "../components/charts/ErrorHeatmap";
 import { Histogram } from "../components/charts/Histogram";
@@ -31,6 +36,8 @@ interface DashData {
   metrics: MetricPoint[];
   heatmap: Awaited<ReturnType<typeof fetchHeatmap>>;
   incidents: Incident[];
+  /** Incidents inside the chart's 24h window, for the annotation lane. */
+  annotationIncidents: Incident[];
   counts: { open: number; total: number };
 }
 
@@ -70,6 +77,23 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({
   // page of rows above — counting the page pinned the tile at its page size.
   const statsState = usePolling(fetchIncidentStats, 2000);
 
+  // The chart's axis ends at the present, so its annotations come from a fetch
+  // over exactly that window — separate from (and much slower than) the table's
+  // poll. usePolling captures its fetcher once, so the window is read through a
+  // ref that every render refreshes.
+  const annotationWindow = useRef({ from: 0, to: 0 });
+  const windowEnd = chartDomainEnd();
+  annotationWindow.current = { from: windowEnd - CHART_WINDOW_MS, to: windowEnd };
+  const annotationsState = usePolling(
+    () =>
+      fetchIncidents({
+        from: annotationWindow.current.from,
+        to: annotationWindow.current.to,
+        limit: 200,
+      }),
+    10_000
+  );
+
   const loading =
     metricsState.loading ||
     heatmapState.loading ||
@@ -90,6 +114,9 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({
             metrics: metricsState.data,
             heatmap: heatmapState.data,
             incidents: incidentsState.data,
+            // Annotations are supplementary: an empty first tick just means an
+            // empty lane for a moment, never API OFFLINE.
+            annotationIncidents: annotationsState.data ?? [],
             counts: {
               // crashed + investigating, straight from /incidents/stats.
               open: statsState.data.open,
@@ -105,6 +132,7 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({
           metrics={data.metrics}
           heatmap={data.heatmap}
           incidents={data.incidents}
+          annotationIncidents={data.annotationIncidents}
           counts={data.counts}
           onSelectIncident={onSelectIncident}
           onSelectCrash={onSelectCrash}
@@ -118,6 +146,7 @@ interface BodyProps {
   metrics: MetricPoint[];
   heatmap: Awaited<ReturnType<typeof fetchHeatmap>>;
   incidents: Incident[];
+  annotationIncidents: Incident[];
   counts: { open: number; total: number };
   onSelectIncident: (id: string) => void;
   onSelectCrash: () => void;
@@ -127,6 +156,7 @@ const DashboardBody: React.FC<BodyProps> = ({
   metrics,
   heatmap,
   incidents,
+  annotationIncidents,
   counts,
   onSelectIncident,
   onSelectCrash,
@@ -149,23 +179,36 @@ const DashboardBody: React.FC<BodyProps> = ({
   const tputDelta = delta((m) => m.throughput);
   const p95Delta = delta((m) => m.p95);
 
-  // Crash marker = the newest crashed incident's detect time (data-driven,
-  // so watcher POSTs move it automatically).
-  const markerT = Date.parse(
-    [...incidents]
-      .sort((a, b) => Date.parse(b.detectedAt) - Date.parse(a.detectedAt))
-      .find((i) => i.status === "crashed")?.detectedAt ?? ""
-  );
+  // Chart window, the same one the axis and the annotations fetch use.
+  const domainEnd = chartDomainEnd();
+  const domainStart = domainEnd - CHART_WINDOW_MS;
 
-  // §9: annotation flags — one per incident inside the chart's time domain.
+  // Crash marker = the newest crashed incident inside that window (data-driven,
+  // so watcher POSTs move it automatically). If none qualifies, name the series'
+  // worst error-rate point instead of drawing nothing at all.
+  const newestCrashT = Date.parse(
+    incidents
+      .filter((i) => i.status === "crashed")
+      .sort((a, b) => Date.parse(b.detectedAt) - Date.parse(a.detectedAt))[0]?.detectedAt ?? ""
+  );
+  const markerT =
+    Number.isFinite(newestCrashT) && newestCrashT >= domainStart
+      ? newestCrashT
+      : metrics.reduce<MetricPoint | undefined>(
+          (best, m) => (m.errorRate > (best?.errorRate ?? -1) ? m : best),
+          undefined
+        )?.t;
+
+  // §9: annotation flags — the windowed fetch, not the table's page (page 1 is
+  // all live rows, which is why the lane used to collapse into one column).
   const annotations: CrashAnnotation[] = useMemo(
     () =>
-      incidents.map((i) => ({
+      annotationIncidents.map((i) => ({
         t: Date.parse(i.detectedAt),
         id: i.id,
         title: i.title,
       })),
-    [incidents]
+    [annotationIncidents]
   );
 
   // Briefly highlight rows that appeared at the top since the last poll.
@@ -248,6 +291,7 @@ const DashboardBody: React.FC<BodyProps> = ({
         <CrashChart
           data={metrics}
           height={280}
+          windowMs={CHART_WINDOW_MS}
           markerT={markerT}
           annotations={annotations}
           sweep
