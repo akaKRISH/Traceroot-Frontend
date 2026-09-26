@@ -33,10 +33,24 @@ export function fetchHealth(): Promise<{
   return get("/health");
 }
 
-// v1 list endpoints return { items, nextCursor, hasMore }; the UI shows the
-// first page only, so unwrap items here.
-export function fetchIncidents(): Promise<Incident[]> {
-  return get<{ items: Incident[] }>("/incidents").then((page) => page.items);
+// v1 list endpoints return { items, nextCursor, hasMore }; the UI unwraps the
+// first page here. `from`/`to` are unix ms, which lets the crash chart ask for
+// exactly the window it draws instead of the newest rows (limit max: 500).
+export function fetchIncidents(opts?: {
+  from?: number;
+  to?: number;
+  limit?: number;
+  status?: string;
+}): Promise<Incident[]> {
+  const query = new URLSearchParams();
+  if (opts?.from !== undefined) query.set("from", String(Math.round(opts.from)));
+  if (opts?.to !== undefined) query.set("to", String(Math.round(opts.to)));
+  if (opts?.limit !== undefined) query.set("limit", String(opts.limit));
+  if (opts?.status) query.set("status", opts.status);
+  const suffix = query.toString();
+  return get<{ items: Incident[] }>(`/incidents${suffix ? `?${suffix}` : ""}`).then(
+    (page) => page.items
+  );
 }
 
 export function fetchIncident(id: string): Promise<Incident> {
