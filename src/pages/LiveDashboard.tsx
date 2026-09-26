@@ -10,7 +10,13 @@ import { CrashChart, CrashAnnotation } from "../components/charts/CrashChart";
 import { LatencyBands } from "../components/charts/LatencyBands";
 import { ErrorHeatmap } from "../components/charts/ErrorHeatmap";
 import { Histogram } from "../components/charts/Histogram";
-import { fetchHeatmap, fetchIncidentCount, fetchIncidents, fetchMetrics } from "../lib/api";
+import {
+  fetchHeatmap,
+  fetchIncidentCount,
+  fetchIncidentStats,
+  fetchIncidents,
+  fetchMetrics,
+} from "../lib/api";
 import { usePolling } from "../lib/usePolling";
 import { pushRailEvent } from "../lib/railFeed";
 import { formatDelta } from "../lib/format";
@@ -60,12 +66,23 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({
     });
   });
   const countState = usePolling(fetchIncidentCount, 2000);
+  // §12: the open count is an aggregate over every incident, not over the
+  // page of rows above — counting the page pinned the tile at its page size.
+  const statsState = usePolling(fetchIncidentStats, 2000);
 
   const loading =
-    metricsState.loading || heatmapState.loading || incidentsState.loading;
+    metricsState.loading ||
+    heatmapState.loading ||
+    incidentsState.loading ||
+    statsState.loading;
 
   const state =
-    loading || !metricsState.data || !heatmapState.data || !incidentsState.data || !countState.data
+    loading ||
+    !metricsState.data ||
+    !heatmapState.data ||
+    !incidentsState.data ||
+    !countState.data ||
+    !statsState.data
       ? ({ phase: "loading" } as const)
       : ({
           phase: "loaded",
@@ -74,7 +91,8 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({
             heatmap: heatmapState.data,
             incidents: incidentsState.data,
             counts: {
-              open: incidentsState.data.filter((i) => i.status !== "resolved").length,
+              // crashed + investigating, straight from /incidents/stats.
+              open: statsState.data.open,
               total: countState.data.count,
             },
           },

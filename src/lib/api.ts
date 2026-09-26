@@ -65,6 +65,16 @@ export function fetchIncidentCount(): Promise<{ count: number }> {
   return get("/incidents/count");
 }
 
+// Server-side aggregate; unlike counting one page of rows this has no ceiling.
+export function fetchIncidentStats(): Promise<{
+  open: number;
+  total: number;
+  critical: number;
+  affected: number;
+}> {
+  return get("/incidents/stats");
+}
+
 export async function clearIncidents(): Promise<{ cleared: number }> {
   const res = await fetch(`${BASE}/incidents`, { method: "DELETE" });
   if (!res.ok) throw new ApiError(res.status, `${res.status} DELETE /incidents`);
