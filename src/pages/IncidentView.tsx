@@ -9,9 +9,10 @@ import {
   Wrench,
 } from "lucide-react";
 import { Incident } from "../types";
-import { fetchIncident, fetchServices, fetchTrace } from "../lib/api";
+import { fetchIncident, fetchMetrics, fetchServices, fetchTrace } from "../lib/api";
 import { usePageData, AsyncPage } from "../components/primitives/AsyncPage";
 import { usePolling } from "../lib/usePolling";
+import { formatTime } from "../lib/format";
 import { StatusBadge } from "../components/primitives/StatusBadge";
 import { SeverityBadge } from "../components/primitives/SeverityBadge";
 import { Panel } from "../components/primitives/Panel";
@@ -29,6 +30,27 @@ import { SuggestedActionsCard } from "../components/incident/SuggestedActionsCar
 import { CrashChart } from "../components/charts/CrashChart";
 import { ServiceGraph } from "../components/charts/ServiceGraph";
 
+// The watcher never captures spans: its incidents carry a placeholder trace id
+// ("tr_local") that has no trace row behind it. A missing trace degrades to a
+// trace-less view — it must never fail the whole page as API OFFLINE.
+const PLACEHOLDER_TRACE_IDS = new Set(["tr_000", "tr_local"]);
+const CRASH_WINDOW_MS = 30 * 60_000;
+const FALLBACK_POINTS = 60;
+
+type LoadedTrace = Awaited<ReturnType<typeof fetchTrace>> | null;
+
+function loadTrace(traceId: string): Promise<LoadedTrace> {
+  if (!traceId || PLACEHOLDER_TRACE_IDS.has(traceId)) return Promise.resolve(null);
+  return fetchTrace(traceId).catch(() => null);
+}
+
+interface Loaded {
+  incident: Incident;
+  trace: LoadedTrace;
+  metrics: Awaited<ReturnType<typeof fetchMetrics>>;
+  services: Awaited<ReturnType<typeof fetchServices>>;
+}
+
 interface IncidentViewProps {
   incidentId: string;
   onViewTrace: (traceId: string, spanId?: string) => void;
@@ -40,13 +62,14 @@ export const IncidentView: React.FC<IncidentViewProps> = ({
   onViewTrace,
   onBack,
 }) => {
-  // Services are static — one-shot. The incident itself is fetched once to
-  // learn its status; crashed incidents then poll so occurrences stay fresh.
+  // Services and metrics are static — one-shot. The incident itself is fetched
+  // once to learn its status; crashed incidents then poll so occurrences stay
+  // fresh, keeping the trace/metrics loaded with the first response.
   const state = usePageData(() =>
-    Promise.all([fetchIncident(incidentId), fetchServices()]).then(([incident, svc]) => {
-      const traceFetch = incident.traceId !== "tr_000" ? fetchTrace(incident.traceId) : Promise.resolve(null);
-      return traceFetch.then((trace) => ({ incident, trace, services: svc }));
-    })
+    Promise.all([fetchIncident(incidentId), fetchServices(), fetchMetrics()]).then(
+      ([incident, services, metrics]) =>
+        loadTrace(incident.traceId).then((trace) => ({ incident, trace, metrics, services }))
+    )
   );
 
   if (state.phase === "loaded" && state.data.incident.status === "crashed") {
@@ -59,6 +82,7 @@ export const IncidentView: React.FC<IncidentViewProps> = ({
         <Body
           incident={data.incident}
           trace={data.trace}
+          metrics={data.metrics}
           services={data.services}
           onViewTrace={onViewTrace}
           onBack={onBack}
@@ -70,7 +94,7 @@ export const IncidentView: React.FC<IncidentViewProps> = ({
 
 const PollingBody: React.FC<{
   incidentId: string;
-  initial: { incident: Incident; trace: Awaited<ReturnType<typeof fetchTrace>> | null; services: Awaited<ReturnType<typeof fetchServices>> };
+  initial: Loaded;
   onViewTrace: (traceId: string, spanId?: string) => void;
   onBack: () => void;
 }> = ({ incidentId, initial, onViewTrace, onBack }) => {
@@ -80,6 +104,7 @@ const PollingBody: React.FC<{
     <Body
       incident={incident}
       trace={initial.trace}
+      metrics={initial.metrics}
       services={initial.services}
       onViewTrace={onViewTrace}
       onBack={onBack}
@@ -87,16 +112,32 @@ const PollingBody: React.FC<{
   );
 };
 
-interface BodyProps {
-  incident: Incident;
-  trace: Awaited<ReturnType<typeof fetchTrace>> | null;
-  services: Awaited<ReturnType<typeof fetchServices>>;
+interface BodyProps extends Loaded {
   onViewTrace: (traceId: string, spanId?: string) => void;
   onBack: () => void;
 }
 
-const Body: React.FC<BodyProps> = ({ incident, trace, services, onViewTrace, onBack }) => {
+const Body: React.FC<BodyProps> = ({ incident, trace, metrics, services, onViewTrace, onBack }) => {
   const crashT = Date.parse(incident.detectedAt);
+  const hasCrashT = Number.isFinite(crashT);
+
+  // Compact crash chart: the ±30 min window when the metric series covers the
+  // crash. Live incidents are detected after the series ends, so fall back to
+  // the most recent hour — labelled with its real clock range, not "now".
+  const crashWindow = React.useMemo(() => {
+    const around =
+      hasCrashT && metrics.length > 0
+        ? metrics.filter((m) => m.t >= crashT - CRASH_WINDOW_MS && m.t <= crashT + CRASH_WINDOW_MS)
+        : [];
+    if (around.length > 1) return { data: around, title: "ERROR RATE · ±30 MIN AROUND CRASH" };
+    const tail = metrics.slice(-FALLBACK_POINTS);
+    if (tail.length < 2) return { data: tail, title: "ERROR RATE · NO DATA" };
+    const span = (t: number) => formatTime(t).slice(0, 5);
+    return {
+      data: tail,
+      title: `ERROR RATE · ${span(tail[0].t)} → ${span(tail[tail.length - 1].t)}`,
+    };
+  }, [metrics, crashT, hasCrashT]);
 
   // Blast radius: the incident's service node + its direct neighbors.
   const incidentService = services.nodes.find((s) => s.name === incident.service);
@@ -134,8 +175,13 @@ const Body: React.FC<BodyProps> = ({ incident, trace, services, onViewTrace, onB
           </div>
           <div className="flex flex-col items-end gap-2">
             <span className="mono label">{incident.relativeTime}</span>
-            {/* §10: the trace ID as a serialized artifact, top-right */}
-            {incident.traceId !== "tr_000" && <Barcode id={incident.traceId} />}
+            {/* §10: the trace ID as a serialized artifact, top-right. No trace
+                loaded (live watcher incident) → name the absence instead. */}
+            {trace ? (
+              <Barcode id={incident.traceId} />
+            ) : (
+              <span className="mono label text-muted">NO TRACE CAPTURED</span>
+            )}
           </div>
         </div>
 
@@ -164,15 +210,15 @@ const Body: React.FC<BodyProps> = ({ incident, trace, services, onViewTrace, onB
       </div>
 
       {/* Compact crash chart — line + marker only, click opens the trace */}
-      <Panel title="ERROR RATE · ±30 MIN AROUND CRASH" className="mb-0">
+      <Panel title={crashWindow.title} className="mb-0">
         <div className="p-2">
           <CrashChart
-            data={[]}
+            data={crashWindow.data}
             compact
             showVolume={false}
             height={120}
-            markerT={crashT}
-            onSelectT={() => trace && onViewTrace(incident.traceId)}
+            markerT={hasCrashT ? crashT : undefined}
+            onSelectT={trace ? () => onViewTrace(incident.traceId) : undefined}
           />
         </div>
       </Panel>
