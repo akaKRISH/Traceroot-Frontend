@@ -113,13 +113,23 @@ const DashboardBody: React.FC<BodyProps> = ({
   onSelectIncident,
   onSelectCrash,
 }) => {
-  const last = metrics[metrics.length - 1];
-  const hourAgo = metrics[metrics.length - 61];
+  const last = metrics.at(-1);
+  const hourAgo = metrics.length >= 61 ? metrics[metrics.length - 61] : metrics[0];
   const spark = (pick: (m: MetricPoint) => number) => metrics.slice(-60).map(pick);
 
-  const errDelta = formatDelta(((last.errorRate - hourAgo.errorRate) / hourAgo.errorRate) * 100);
-  const tputDelta = formatDelta(((last.throughput - hourAgo.throughput) / hourAgo.throughput) * 100);
-  const p95Delta = formatDelta(((last.p95 - hourAgo.p95) / hourAgo.p95) * 100);
+  const delta = (
+    pick: (m: MetricPoint) => number,
+    fallback: { text: string; positive: boolean } = { text: "—", positive: true }
+  ) => {
+    if (!last || !hourAgo || hourAgo === last) return fallback;
+    const prev = pick(hourAgo);
+    if (!prev) return fallback;
+    return formatDelta(((pick(last) - prev) / prev) * 100);
+  };
+
+  const errDelta = delta((m) => m.errorRate);
+  const tputDelta = delta((m) => m.throughput);
+  const p95Delta = delta((m) => m.p95);
 
   // Crash marker = the newest crashed incident's detect time (data-driven,
   // so watcher POSTs move it automatically).
@@ -175,21 +185,21 @@ const DashboardBody: React.FC<BodyProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5">
         <StatTile
           label="ERROR RATE"
-          value={last.errorRate * 100}
+          value={(last?.errorRate ?? 0) * 100}
           delta={errDelta}
           icon={AlertOctagon}
           spark={spark((m) => m.errorRate * 100)}
         />
         <StatTile
           label="THROUGHPUT"
-          value={last.throughput}
+          value={last?.throughput ?? 0}
           delta={tputDelta}
           icon={Activity}
           spark={spark((m) => m.throughput)}
         />
         <StatTile
           label="P95 LATENCY"
-          value={last.p95}
+          value={last?.p95 ?? 0}
           delta={p95Delta}
           icon={Gauge}
           spark={spark((m) => m.p95)}
