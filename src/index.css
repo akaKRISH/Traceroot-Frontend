@@ -1,0 +1,211 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+
+  /* Motion grammar tokens (§15). Reduced motion halves them. */
+  --t-fast: 150ms; /* hover */
+  --t-press: 200ms; /* press / value change */
+  --t-row: 200ms; /* row enter */
+  --t-odometer: 220ms; /* digit roll */
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: #f5f3ee;
+  color: #0a0a0a;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+  font-family: "Inter Tight", Inter, sans-serif;
+}
+
+::selection {
+  background: #0a0a0a;
+  color: #f5f3ee;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f3ee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0a0a0a;
+  border: 3px solid #f5f3ee;
+}
+
+@layer utilities {
+  /* ── TYPE SCALE (Layer 3 §1) — four buckets only: 9 / 13 / 22 / 56 ── */
+
+  /* 9px mono uppercase — data labels, axis ticks, micro-labels, table headers */
+  .label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(10, 10, 10, 0.55);
+  }
+
+  /* 13px sans — body copy, panel titles, buttons, row content */
+  .t-body {
+    font-size: 13px;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  /* 22px mono tabular bold — section headings, inline KPIs */
+  .t-kpi {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 56px mono tabular bold — hero stat numbers ONLY */
+  .t-hero {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 56px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Paper-on-grid texture — hero panels only. */
+  .grid-bg {
+    background-image: repeating-linear-gradient(
+        0deg,
+        rgba(10, 10, 10, 0.05) 0,
+        rgba(10, 10, 10, 0.05) 1px,
+        transparent 1px,
+        transparent 24px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(10, 10, 10, 0.05) 0,
+        rgba(10, 10, 10, 0.05) 1px,
+        transparent 1px,
+        transparent 24px
+      );
+    background-size: 24px 24px;
+  }
+
+  /* Section divider marquee — 30s linear loop, pauses on hover (§12). */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  .marquee-pause:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+
+  /* Marching ants (§7): 1s linear loops; duration scales with edge traffic. */
+  .ant-anim {
+    animation: ant-march 1s linear infinite;
+  }
+  .ant-anim-rev {
+    animation: ant-march-rev 1s linear infinite;
+  }
+}
+
+/* ── Keyframes (Layer 3) ─────────────────────────────────────────── */
+
+/* The one Layer-2 non-ticker animation: danger square travelling an error edge. */
+@keyframes edge-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Marching ants (§7): healthy edges march 0 → -20, error edges +20. 1s linear. */
+@keyframes ant-march {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+@keyframes ant-march-rev {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 20;
+  }
+}
+
+/* Section divider marquee: -50% of a doubled strip = seamless loop. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Command rail rows slide in from the top over 150ms (§3). */
+@keyframes rail-enter {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Danger tint held 2s, then cleared instantly (steps — no fade, §16). */
+@keyframes rail-flash {
+  0% {
+    background-color: rgba(255, 77, 77, 0.16);
+  }
+  100% {
+    background-color: rgba(255, 77, 77, 0);
+  }
+}
+
+/* CrashChart flag hover-expand (§9): title reveals on flag hover. */
+.flag-title {
+  opacity: 0;
+  transition: opacity var(--t-fast) ease-out;
+}
+.flag-group:hover .flag-title {
+  opacity: 1;
+}
+
+/* ── Reduced motion (§15): continuous animations OFF, transitions halved ── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 75ms;
+    --t-press: 100ms;
+    --t-row: 100ms;
+    --t-odometer: 110ms;
+  }
+
+  .animate-marquee,
+  .ant-anim,
+  .ant-anim-rev,
+  .animate-pulse {
+    animation: none !important;
+  }
+}
