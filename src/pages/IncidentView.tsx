@@ -166,7 +166,7 @@ const Body: React.FC<BodyProps> = ({ incident, trace, metrics, services, onViewT
       </button>
 
       {/* Incident meta panel — §14: brut-lg, the top elevation level */}
-      <div className="border-2 border-ink shadow-brut-lg bg-paper p-6 mb-8">
+      <div className="border-2 border-ink shadow-brut-lg bg-panel p-6 mb-8">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <span className="mono t-body font-bold text-ink tabular-nums">#{incident.id}</span>

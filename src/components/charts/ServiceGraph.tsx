@@ -46,7 +46,7 @@ export const ServiceGraph: React.FC<ServiceGraphProps> = ({
       >
         <defs>
           <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a0a0a" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink)" />
           </marker>
           <marker id="arrow-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff4d4d" />
@@ -66,7 +66,7 @@ export const ServiceGraph: React.FC<ServiceGraphProps> = ({
           const hasErrors = e.errors > 0;
           const isDown = a.health === "down" || b.health === "down";
           const hovered = hoverEdge === i;
-          const stroke = isDown ? "#a3a3a3" : hasErrors ? "#ff4d4d" : "#0a0a0a";
+          const stroke = isDown ? "#8a8a80" : hasErrors ? "#ff4d4d" : "var(--ink)";
           const sw = hovered ? 4 : hasErrors ? 3 : 2;
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
@@ -98,7 +98,7 @@ export const ServiceGraph: React.FC<ServiceGraphProps> = ({
                   width={6}
                   height={6}
                   fill="#ff4d4d"
-                  stroke="#0a0a0a"
+                  stroke="var(--ink)"
                   strokeWidth={1}
                   style={{
                     offsetPath: `path('M ${x1} ${y1} L ${x2} ${y2}')`,
@@ -108,8 +108,8 @@ export const ServiceGraph: React.FC<ServiceGraphProps> = ({
               )}
               {hovered && (
                 <g>
-                  <rect x={midX - 62} y={midY - 22} width={124} height={16} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={2} />
-                  <text x={midX} y={midY - 10} fontSize="9" fill="#0a0a0a" textAnchor="middle" className="mono uppercase tracking-[0.05em]">
+                  <rect x={midX - 62} y={midY - 22} width={124} height={16} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
+                  <text x={midX} y={midY - 10} fontSize="9" fill="var(--ink)" textAnchor="middle" className="mono uppercase tracking-[0.05em]">
                     {e.calls}/s · {e.errors} ERR · P95 {e.p95}MS
                   </text>
                 </g>
@@ -134,21 +134,21 @@ export const ServiceGraph: React.FC<ServiceGraphProps> = ({
               style={{ cursor: onSelect ? "pointer" : "default" }}
             >
               {/* brut shadow = ink rect offset 4px behind, drawn first */}
-              {hovered && <rect x={cx - NODE / 2 + 4} y={cy - NODE / 2 + 4} width={NODE} height={NODE} fill="#0a0a0a" />}
+              {hovered && <rect x={cx - NODE / 2 + 4} y={cy - NODE / 2 + 4} width={NODE} height={NODE} fill="var(--ink)" />}
               <rect
                 x={cx - NODE / 2}
                 y={cy - NODE / 2}
                 width={NODE}
                 height={NODE}
                 fill={fill}
-                stroke="#0a0a0a"
+                stroke="var(--ink)"
                 strokeWidth={selected ? 3 : 2}
               />
-              <text x={cx} y={cy + NODE / 2 + 14} fontSize="9" fill="rgba(10,10,10,0.55)" textAnchor="middle" className="mono uppercase tracking-[0.15em]">
+              <text x={cx} y={cy + NODE / 2 + 14} fontSize="9" fill="var(--ink-soft)" textAnchor="middle" className="mono uppercase tracking-[0.15em]">
                 {SHORT[n.id] ?? n.name}
               </text>
               {selected && (
-                <rect x={cx - NODE / 2 - 4} y={cy - NODE / 2 - 4} width={NODE + 8} height={NODE + 8} fill="none" stroke="#0a0a0a" strokeWidth={2} />
+                <rect x={cx - NODE / 2 - 4} y={cy - NODE / 2 - 4} width={NODE + 8} height={NODE + 8} fill="none" stroke="var(--ink)" strokeWidth={2} />
               )}
             </g>
           );

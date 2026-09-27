@@ -7,8 +7,8 @@ interface SeverityBadgeProps {
 
 export const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity }) => {
   const severityStyles: Record<Severity, string> = {
-    critical: "bg-danger text-ink",
-    high: "bg-warn text-ink",
+    critical: "bg-danger text-ink glow-danger",
+    high: "bg-warn text-ink glow-warn",
     medium: "bg-info text-paper",
     low: "bg-muted text-ink",
   };

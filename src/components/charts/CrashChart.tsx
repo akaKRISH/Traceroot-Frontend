@@ -216,7 +216,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
           {!compact && (
             <defs>
               <pattern id="crashHatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                <rect width="7" height="7" fill="rgba(255, 77, 77, 0.10)" />
+                <rect width="7" height="7" fill="rgba(255, 77, 77, 0.40)" />
                 <line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255, 77, 77, 0.35)" strokeWidth="1.5" />
               </pattern>
               {sweep && (
@@ -255,27 +255,27 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 <g transform={`translate(${boxX}, ${f.laneY})`}>
                   <g className="transition-opacity duration-150 ease-out" style={{ opacity: lit ? 1 : 0.92 }}>
                     {/* SVG brut shadow: ink rect offset 2,2 behind the label */}
-                    <rect x={2} y={2} width={boxW} height={13} fill="#0a0a0a" />
-                    <rect x={0} y={0} width={boxW} height={13} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
-                    <text x={boxW / 2} y={10} fontSize="9" fill="#0a0a0a" textAnchor="middle" className="mono font-bold">
+                    <rect x={2} y={2} width={boxW} height={13} fill="var(--ink)" />
+                    <rect x={0} y={0} width={boxW} height={13} fill="var(--paper)" stroke="var(--ink)" strokeWidth={1} />
+                    <text x={boxW / 2} y={10} fontSize="9" fill="var(--ink)" textAnchor="middle" className="mono font-bold">
                       {label}
                     </text>
                   </g>
                   {/* Hover expands the flag: timestamp + title, sans 12px→13px;
                       a multi-crash column grows a row per incident (max 5). */}
                   <g className="flag-title" transform={`translate(${boxW + 4}, 0)`}>
-                    <rect x={0} y={0} width={panelW} height={13 + (listed.length - 1) * 11} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
+                    <rect x={0} y={0} width={panelW} height={13 + (listed.length - 1) * 11} fill="var(--paper)" stroke="var(--ink)" strokeWidth={1} />
                     {listed.map((a, i) => (
                       <g key={a.id}>
                         {listed.length > 1 && (
-                          <text x={4} y={10 + i * 11} fontSize="9" fill="#0a0a0a" className="mono font-bold">
+                          <text x={4} y={10 + i * 11} fontSize="9" fill="var(--ink)" className="mono font-bold">
                             #{a.id.slice(0, 4)}
                           </text>
                         )}
-                        <text x={48} y={10 + i * 11} fontSize="9" fill="rgba(10, 10, 10, 0.55)" className="mono">
+                        <text x={48} y={10 + i * 11} fontSize="9" fill="var(--ink-soft)" className="mono">
                           {formatTime(a.t)}
                         </text>
-                        <text x={94} y={10.5 + i * 11} fontSize="9" fill="#0a0a0a" className="font-semibold" style={{ fontFamily: "Inter Tight, sans-serif", letterSpacing: "-0.01em" }}>
+                        <text x={94} y={10.5 + i * 11} fontSize="9" fill="var(--ink)" className="font-semibold" style={{ fontFamily: "Inter Tight, sans-serif", letterSpacing: "-0.01em" }}>
                           {a.title.slice(0, 18)}
                         </text>
                       </g>
@@ -296,7 +296,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                   x2={width - PAD.right}
                   y1={gy}
                   y2={gy}
-                  stroke={v === 0 ? "#0a0a0a" : "#d9d6cf"}
+                  stroke={v === 0 ? "var(--ink)" : "var(--grid-line)"}
                   strokeWidth={v === 0 ? 2 : 1}
                 />
                 {!compact && (
@@ -304,7 +304,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                     x={width - PAD.right + 6}
                     y={gy + 3}
                     fontSize="9"
-                    fill="rgba(10, 10, 10, 0.55)"
+                    fill="var(--ink-soft)"
                     className="mono uppercase tracking-[0.15em]"
                   >
                     {Math.round(v * 100)}%
@@ -322,7 +322,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 x={geom.x(t)}
                 y={height + flagH + 12}
                 fontSize="9"
-                fill="rgba(10, 10, 10, 0.55)"
+                fill="var(--ink-soft)"
                 textAnchor="middle"
                 className="mono uppercase tracking-[0.15em]"
               >
@@ -339,7 +339,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
               d={stepPath(geom.pts.map((p) => ({ x: p.x, y: p.y + flagH })))}
               fill="none"
               stroke="#ff4d4d"
-              strokeWidth={compact ? 2 : 3}
+              strokeWidth={compact ? 2.5 : 3}
               strokeLinecap="square"
               strokeLinejoin="miter"
             />
@@ -348,11 +348,11 @@ export const CrashChart: React.FC<CrashChartProps> = ({
           {/* Marker: 2px danger vertical, ink label panel at top, 6px square at base */}
           {marker && (
             <g transform={`translate(0, ${flagH})`}>
-              <line x1={marker.x} x2={marker.x} y1={PAD.top - 6} y2={geom.y(0)} stroke="#ff4d4d" strokeWidth={2} />
+              <line x1={marker.x} x2={marker.x} y1={PAD.top - 6} y2={geom.y(0)} stroke="#ff4d4d" strokeWidth={2} className="marker-glow" />
               {!compact && (
                 <g transform={`translate(${Math.min(Math.max(marker.x - 44, PAD.left), width - PAD.right - 88)}, 0)`}>
-                  <rect x={0} y={0} width={88} height={18} fill="#0a0a0a" stroke="#0a0a0a" strokeWidth={2} />
-                  <text x={44} y={13} fontSize="9" fill="#f5f3ee" textAnchor="middle" className="mono font-bold tracking-[0.1em]">
+                  <rect x={0} y={0} width={88} height={18} fill="var(--ink)" stroke="var(--ink)" strokeWidth={2} />
+                  <text x={44} y={13} fontSize="9" fill="var(--paper)" textAnchor="middle" className="mono font-bold tracking-[0.1em]">
                     CRASH · {formatTime(marker.t).slice(0, 5)}
                   </text>
                 </g>
@@ -362,8 +362,8 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 y={geom.y(0) - 6}
                 width={6}
                 height={6}
-                fill={litId === "marker" ? "#ff4d4d" : "#0a0a0a"}
-                stroke={litId === "marker" ? "#0a0a0a" : "none"}
+                fill={litId === "marker" ? "#ff4d4d" : "var(--ink)"}
+                stroke={litId === "marker" ? "var(--ink)" : "none"}
                 strokeWidth={1}
               />
             </g>
@@ -377,19 +377,19 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 x2={geom.pts[hover!].x}
                 y1={PAD.top}
                 y2={geom.y(0)}
-                stroke="#0a0a0a"
+                stroke="var(--ink)"
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
               <g transform={`translate(${Math.min(geom.pts[hover!].x + 8, width - 168)}, ${PAD.top + 4})`}>
-                <rect width={148} height={56} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={2} />
-                <text x={10} y={18} fontSize="9" fill="rgba(10,10,10,0.55)" className="mono uppercase tracking-[0.15em]">
+                <rect width={148} height={56} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
+                <text x={10} y={18} fontSize="9" fill="var(--ink-soft)" className="mono uppercase tracking-[0.15em]">
                   {formatTime(hoverPt.t)}
                 </text>
-                <text x={10} y={34} fontSize="13" fill="#0a0a0a" fontWeight={700} className="mono">
+                <text x={10} y={34} fontSize="13" fill="var(--ink)" fontWeight={700} className="mono">
                   {formatErrorRate(hoverPt.errorRate * 100)}
                 </text>
-                <text x={10} y={48} fontSize="9" fill="rgba(10,10,10,0.55)" className="mono uppercase tracking-[0.15em]">
+                <text x={10} y={48} fontSize="9" fill="var(--ink-soft)" className="mono uppercase tracking-[0.15em]">
                   {Math.round(hoverPt.throughput)}/S
                 </text>
               </g>
@@ -408,7 +408,7 @@ export const CrashChart: React.FC<CrashChartProps> = ({
               fill ok/danger/warn by error rate, 4px body + 2px gap, ink border. */}
           {showVolume && !compact && (
             <g transform={`translate(0, ${volumeTop})`}>
-              <line x1={PAD.left} x2={width - PAD.right} y1={64} y2={64} stroke="#0a0a0a" strokeWidth={1} />
+              <line x1={PAD.left} x2={width - PAD.right} y1={64} y2={64} stroke="var(--ink)" strokeWidth={1} />
               {data.map((d, i) => {
                 const cx = geom.pts[i].x;
                 const yFor = (v: number) => 64 - 8 - (Math.min(v, 1200) / 1200) * (64 - 12);
@@ -418,14 +418,14 @@ export const CrashChart: React.FC<CrashChartProps> = ({
                 const fill = d.errorRate === 0 ? "#3ddc84" : d.errorRate > 0.01 ? "#ff4d4d" : "#ffb84d";
                 return (
                   <g key={d.t}>
-                    <line x1={cx} x2={cx} y1={wickTop} y2={Math.max(wickBottom, wickTop + 1)} stroke="#0a0a0a" strokeWidth={1} />
+                    <line x1={cx} x2={cx} y1={wickTop} y2={Math.max(wickBottom, wickTop + 1)} stroke="var(--ink)" strokeWidth={1} />
                     <rect
                       x={cx - 2}
                       y={bodyTop}
                       width={4}
                       height={Math.max(wickBottom - bodyTop, 1)}
                       fill={fill}
-                      stroke="#0a0a0a"
+                      stroke="var(--ink)"
                       strokeWidth={1}
                     />
                   </g>

@@ -47,7 +47,7 @@ export const StackTraceCard: React.FC<StackTraceCardProps> = ({ stack, onSelectF
           frame.inApp
             ? "bg-paper border-l-4 border-l-ink"
             : "opacity-45 border-l-4 border-l-transparent"
-        } hover:opacity-100 hover:bg-white hover:shadow-brut z-0 hover:z-10 ${
+        } hover:opacity-100 hover:bg-ink/[0.08] hover:shadow-brut z-0 hover:z-10 ${
           clickable
             ? "w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             : ""

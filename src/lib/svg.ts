@@ -80,7 +80,7 @@ export function niceTicks(min: number, max: number, count: number): number[] {
 
 // Deterministic service → fill color. Danger is reserved for error spans
 // only, so it is never in this palette — one red rect per flame graph.
-const SERVICE_PALETTE = ["#8b5cf6", "#4d7cff", "#3ddc84", "#ffb84d", "#a3a3a3"];
+const SERVICE_PALETTE = ["#8b5cf6", "#4d7cff", "#3ddc84", "#ffb84d", "#8a8a80"];
 
 export function serviceColor(service: string): string {
   let h = 0;

@@ -3,7 +3,7 @@ import { pushRailEvent, useRailFeed, RailEvent, RailEventType } from "../../lib/
 import { cn } from "../../lib/cn";
 
 const TYPE_COLOR: Record<RailEventType, string> = {
-  ERR: "text-danger",
+  ERR: "text-danger glow-danger",
   OK: "text-ok",
   SPAN: "text-info",
   WARN: "text-warn",
@@ -39,7 +39,7 @@ const RailRow: React.FC<{ ev: RailEvent; animate: boolean }> = ({ ev, animate })
     <div
       className={cn(
         "flex h-[20px] shrink-0 items-center gap-2 px-3 whitespace-pre mono text-[10px] leading-none",
-        ev.sim && "text-ink/55"
+        ev.sim && "text-ink/70"
       )}
       style={
         animate
@@ -47,14 +47,14 @@ const RailRow: React.FC<{ ev: RailEvent; animate: boolean }> = ({ ev, animate })
               animation:
                 "rail-enter 150ms ease-out both, rail-flash 2s steps(1) forwards",
               ["--flash" as string]:
-                ev.type === "ERR" ? "rgba(255, 77, 77, 0.16)" : "rgba(10, 10, 10, 0.07)",
+                ev.type === "ERR" ? "rgba(255, 77, 77, 0.16)" : "rgba(232, 230, 223, 0.07)",
             }
           : undefined
       }
     >
-      <span className="text-ink/55 shrink-0">{ev.time}</span>
+      <span className="text-ink/70 shrink-0">{ev.time}</span>
       <span className={cn("font-bold shrink-0 w-[30px]", TYPE_COLOR[ev.type])}>{ev.type}</span>
-      <span className="text-ink/55 shrink-0 truncate">{ev.id}</span>
+      <span className="text-ink/70 shrink-0 truncate">{ev.id}</span>
       <span className="flex-1" />
       <span className="font-bold text-ink tabular-nums shrink-0">{ev.delta}</span>
       {ev.sim && <span className="text-ink/40 shrink-0">SIM</span>}
@@ -88,15 +88,15 @@ export const CommandRail: React.FC = () => {
   const evtPerMin = events.filter((e) => e.at >= oneMinAgo).length;
 
   return (
-    <aside className="w-[320px] shrink-0 h-full flex flex-col bg-paper border-l-2 border-ink select-none">
+    <aside className="w-[320px] shrink-0 h-full flex flex-col bg-paper panel-surface border-l-2 border-ink select-none">
       {/* Header strip — 32px */}
       <div className="h-8 shrink-0 border-b-2 border-ink px-3 flex items-center justify-between">
         <span className="label text-ink">EVENT STREAM</span>
-        <span className="w-1.5 h-1.5 bg-ok animate-pulse" />
+        <span className="w-1.5 h-1.5 bg-ok text-ok status-dot" />
       </div>
 
       {/* Raw event list */}
-      <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={listRef} className="rail-scroll flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col">
           {[...events].reverse().map((ev) => (
             <RailRow key={ev.key} ev={ev} animate={ev.at >= mountAt.current} />

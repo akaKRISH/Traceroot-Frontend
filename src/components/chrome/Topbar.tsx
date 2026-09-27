@@ -41,9 +41,9 @@ const STATUS_TEXT: Record<ConnStatus, string> = {
   offline: "OFFLINE",
 };
 const STATUS_BG: Record<ConnStatus, string> = {
-  live: "bg-ok",
-  retry: "bg-danger",
-  offline: "bg-muted",
+  live: "bg-ok text-ok status-dot",
+  retry: "bg-danger text-danger status-dot",
+  offline: "bg-muted text-muted status-dot",
 };
 
 export const Topbar: React.FC<TopbarProps> = ({ title, subtitle }) => {
@@ -86,7 +86,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle }) => {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative w-8 h-8 border-2 border-ink bg-paper shadow-brut flex items-center justify-center transition-none hover:bg-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="relative w-8 h-8 border-2 border-ink bg-paper shadow-brut flex items-center justify-center transition-none hover:bg-ink/[0.06] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           <Bell size={16} strokeWidth={2.25} className="text-ink" />
           <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-danger border border-ink" />

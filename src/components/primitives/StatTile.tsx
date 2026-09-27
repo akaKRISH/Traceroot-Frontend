@@ -26,7 +26,7 @@ export const StatTile: React.FC<StatTileProps> = ({
   return (
     <div
       className={cn(
-        "relative border-2 border-ink bg-paper shadow-none p-5",
+        "relative border-2 border-ink bg-panel shadow-none p-5",
         className
       )}
     >

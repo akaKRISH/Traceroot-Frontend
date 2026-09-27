@@ -21,7 +21,7 @@ export const SuggestedActionsCard: React.FC<SuggestedActionsCardProps> = ({
   const variantBg: Record<SuggestedAction["variant"], string> = {
     primary: "bg-info/[0.12] hover:bg-info/[0.18]",
     danger: "bg-danger/[0.12] hover:bg-danger/[0.18]",
-    default: "bg-paper hover:bg-white",
+    default: "bg-paper hover:bg-ink/[0.08]",
   };
 
   return (

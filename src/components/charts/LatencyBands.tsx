@@ -57,14 +57,14 @@ export const LatencyBands: React.FC<LatencyBandsProps> = ({ data, height = 240 }
                   x2={width - PAD.right}
                   y1={gy}
                   y2={gy}
-                  stroke={v === 0 ? "#0a0a0a" : "#d9d6cf"}
+                  stroke={v === 0 ? "var(--ink)" : "var(--grid-line)"}
                   strokeWidth={v === 0 ? 2 : 1}
                 />
                 <text
                   x={width - PAD.right - 4}
                   y={gy - 3}
                   fontSize="9"
-                  fill="rgba(10, 10, 10, 0.55)"
+                  fill="var(--ink-soft)"
                   textAnchor="end"
                   className="mono uppercase tracking-[0.15em]"
                 >
@@ -80,7 +80,7 @@ export const LatencyBands: React.FC<LatencyBandsProps> = ({ data, height = 240 }
                 x={geom.x(t)}
                 y={height - 6}
                 fontSize="9"
-                fill="rgba(10, 10, 10, 0.55)"
+                fill="var(--ink-soft)"
                 textAnchor="middle"
                 className="mono uppercase tracking-[0.15em]"
               >
@@ -104,13 +104,13 @@ export const LatencyBands: React.FC<LatencyBandsProps> = ({ data, height = 240 }
                 x2={geom.x(hoverPoint.t)}
                 y1={PAD.top}
                 y2={geom.y(0)}
-                stroke="#0a0a0a"
+                stroke="var(--ink)"
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
               <g transform={`translate(${Math.min(geom.x(hoverPoint.t) + 8, width - 190)}, ${PAD.top + 4})`}>
-                <rect width={176} height={70} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={2} />
-                <text x={10} y={17} fontSize="9" fill="rgba(10,10,10,0.55)" className="mono uppercase tracking-[0.15em]">
+                <rect width={176} height={70} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
+                <text x={10} y={17} fontSize="9" fill="var(--ink-soft)" className="mono uppercase tracking-[0.15em]">
                   {String(new Date(hoverPoint.t).getHours()).padStart(2, "0")}:
                   {String(new Date(hoverPoint.t).getMinutes()).padStart(2, "0")}:
                   {String(new Date(hoverPoint.t).getSeconds()).padStart(2, "0")}
@@ -118,7 +118,7 @@ export const LatencyBands: React.FC<LatencyBandsProps> = ({ data, height = 240 }
                 <text x={10} y={33} fontSize="13" fill="#3ddc84" fontWeight={700} className="mono">
                   P50 {formatDuration(hoverPoint.p50)}
                 </text>
-                <text x={10} y={47} fontSize="13" fill="#b37316" fontWeight={700} className="mono">
+                <text x={10} y={47} fontSize="13" fill="var(--warn)" fontWeight={700} className="mono">
                   P95 {formatDuration(hoverPoint.p95)}
                 </text>
                 <text x={10} y={61} fontSize="13" fill="#ff4d4d" fontWeight={700} className="mono">

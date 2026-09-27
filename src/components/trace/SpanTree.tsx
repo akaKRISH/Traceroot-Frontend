@@ -19,7 +19,7 @@ export const SpanTree: React.FC<SpanTreeProps> = ({ trace, selectedSpanId, onSel
           type="button"
           onClick={() => onSelectSpan?.(id)}
           className={cn(
-            "w-full text-left flex items-center gap-2 py-1 pr-2 transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink hover:bg-white",
+            "w-full text-left flex items-center gap-2 py-1 pr-2 transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink hover:bg-ink/[0.08]",
             selectedSpanId === id && "bg-ink text-paper hover:bg-ink"
           )}
           style={{ paddingLeft: 8 + depth * 16 }}

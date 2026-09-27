@@ -13,7 +13,7 @@ export const RootCauseCard: React.FC<RootCauseCardProps> = ({ rootCause }) => {
   const { commit, confidence, reasoning } = rootCause;
 
   // ≥80 ok, ≥50 warn, else muted — SVG rect, not a div, so it stays crisp.
-  const fillColor = confidence >= 80 ? "#3ddc84" : confidence >= 50 ? "#ffb84d" : "#a3a3a3";
+  const fillColor = confidence >= 80 ? "#3ddc84" : confidence >= 50 ? "#ffb84d" : "#8a8a80";
 
   return (
     <div className="border-2 border-ink shadow-brut bg-warn/[0.06]">
@@ -24,7 +24,7 @@ export const RootCauseCard: React.FC<RootCauseCardProps> = ({ rootCause }) => {
         {/* Confidence meter as SVG rectangle */}
         <div className="border-2 border-ink bg-paper px-2 py-1 flex items-center gap-2.5">
           <svg width={96} height={14} aria-label={`Confidence ${confidence}%`}>
-            <rect x={1} y={1} width={94} height={12} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={1} />
+            <rect x={1} y={1} width={94} height={12} fill="var(--paper)" stroke="var(--ink)" strokeWidth={1} />
             <rect x={3} y={3} width={Math.max((confidence / 100) * 90, 2)} height={8} fill={fillColor} />
           </svg>
           <span className="mono font-bold t-body text-ink tabular-nums">{confidence}%</span>
@@ -45,7 +45,7 @@ export const RootCauseCard: React.FC<RootCauseCardProps> = ({ rootCause }) => {
             <div className="min-w-0">
               <div className="t-body font-semibold text-ink truncate">{commit.message}</div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="px-1.5 py-0.5 border border-ink mono label text-ink font-bold bg-white">
+                <span className="px-1.5 py-0.5 border border-ink mono label text-ink font-bold bg-panel">
                   {commit.shortHash}
                 </span>
                 <span className="label text-muted">

@@ -29,7 +29,7 @@ export const Panel: React.FC<PanelProps> = ({
     shadow === "brut-lg" ? "shadow-brut-lg" : shadow === "brut" ? "shadow-brut" : "";
   return (
     <section
-      className={cn("border-2 border-ink bg-paper", shadowClass, brackets && "group relative", className)}
+      className={cn("border-2 border-ink bg-panel", shadowClass, brackets && "group relative", className)}
     >
       {brackets && (
         <>
@@ -41,7 +41,7 @@ export const Panel: React.FC<PanelProps> = ({
                 viewBox="0 0 20 20"
                 className="block opacity-0 -translate-x-1 -translate-y-1 transition-[opacity,transform] duration-[180ms] ease-out group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0"
               >
-                <path d="M 1 17 L 1 1 L 17 1" fill="none" stroke="#0a0a0a" strokeWidth={1} />
+                <path d="M 1 17 L 1 1 L 17 1" fill="none" stroke="var(--ink)" strokeWidth={1} />
               </svg>
             </div>
           ))}

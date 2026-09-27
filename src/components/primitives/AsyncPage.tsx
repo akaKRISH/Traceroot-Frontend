@@ -19,7 +19,7 @@ export function AsyncPage<T>({ state, children }: { state: PageState<T>; childre
   if (state.phase === "error") {
     return (
       <div className="px-8 py-16 flex flex-col items-center">
-        <div className="border-2 border-ink shadow-brut bg-paper w-full max-w-md">
+        <div className="border-2 border-ink shadow-brut bg-panel w-full max-w-md">
           <div className="bg-danger border-b-2 border-ink px-4 py-2.5">
             <span className="label text-ink">API OFFLINE</span>
           </div>

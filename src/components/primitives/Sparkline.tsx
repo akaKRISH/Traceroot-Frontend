@@ -13,7 +13,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
   data,
   width = 60,
   height = 20,
-  color = "#0a0a0a",
+  color = "var(--ink)",
   highlightLast = false,
 }) => {
   if (data.length < 2) return null;
@@ -40,7 +40,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
         strokeLinejoin="miter"
       />
       {highlightLast && (
-        <rect x={last.x - 1.5} y={last.y - 1.5} width={3} height={3} fill="#0a0a0a" />
+        <rect x={last.x - 1.5} y={last.y - 1.5} width={3} height={3} fill="var(--ink)" />
       )}
     </svg>
   );

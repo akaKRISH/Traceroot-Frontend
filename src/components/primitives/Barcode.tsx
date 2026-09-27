@@ -35,7 +35,7 @@ export const Barcode: React.FC<BarcodeProps> = ({ id, className }) => {
     <div className={cn("inline-flex flex-col items-start gap-1", className)}>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="block">
         {bars.map((b, i) => (
-          <rect key={i} x={b.x} y={0} width={b.w} height={H} fill="#0a0a0a" />
+          <rect key={i} x={b.x} y={0} width={b.w} height={H} fill="var(--ink)" />
         ))}
       </svg>
       <span className="mono label break-all">{id}</span>

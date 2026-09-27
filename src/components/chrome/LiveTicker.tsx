@@ -41,7 +41,7 @@ export const LiveTicker: React.FC<{ anchorErrPct?: number }> = ({ anchorErrPct =
       )}
     >
       <span
-        className={cn("w-1.5 h-1.5 shrink-0 animate-pulse", alert ? "bg-danger" : "bg-ok")}
+        className={cn("w-1.5 h-1.5 shrink-0 status-dot", alert ? "bg-danger text-danger" : "bg-ok text-ok")}
       />
       <div className="min-w-0">
         <div className="flex items-baseline gap-2">

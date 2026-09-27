@@ -61,7 +61,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
                   onClick={() => onSelectSpan?.(s.id)}
                   title={`${s.operation} · ${s.service}`}
                   className={cn(
-                    "absolute top-0 border-2 border-ink text-left transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+                    "absolute top-0 border-2 border-ink/10 text-left transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
                     isError && "shadow-brut",
                     isSelected && "z-10"
                   )}
@@ -70,7 +70,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
                     width: `${s.w}%`,
                     height: RECT_H,
                     background: fill,
-                    outline: isSelected ? "2px solid #0a0a0a" : undefined,
+                    outline: isSelected ? "2px solid var(--ink)" : undefined,
                     outlineOffset: 0,
                   }}
                 >

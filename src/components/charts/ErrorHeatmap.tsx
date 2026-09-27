@@ -12,7 +12,7 @@ const GAP = 2;
 const ROW_LABEL_W = 150;
 
 function cellFill(errors: number): string {
-  if (errors <= 0) return "#f5f3ee";
+  if (errors <= 0) return "var(--paper)";
   if (errors <= 2) return "rgba(255, 184, 77, 0.4)";
   if (errors <= 9) return "#ffb84d";
   if (errors <= 49) return "rgba(255, 77, 77, 0.6)";
@@ -40,7 +40,7 @@ export const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ cells, services, buc
             x={ROW_LABEL_W - 6}
             y={22 + r * (CELL + GAP) + CELL / 2 + 3}
             fontSize="9"
-            fill="rgba(10, 10, 10, 0.55)"
+            fill="var(--ink-soft)"
             textAnchor="end"
             className="mono uppercase tracking-[0.15em]"
           >
@@ -61,7 +61,7 @@ export const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ cells, services, buc
                 width={CELL}
                 height={CELL}
                 fill={cellFill(errors)}
-                stroke={errors <= 0 ? "#d9d6cf" : "#0a0a0a"}
+                stroke={errors <= 0 ? "var(--grid-line)" : "var(--ink)"}
                 strokeWidth={errors <= 0 ? 1 : 1}
                 onMouseEnter={() => setHover({ service: s, bucket })}
               />
@@ -70,13 +70,13 @@ export const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ cells, services, buc
         )}
 
         {/* Column labels: -60m ... now */}
-        <text x={ROW_LABEL_W} y={12} fontSize="9" fill="rgba(10, 10, 10, 0.55)" className="mono uppercase tracking-[0.15em]">
+        <text x={ROW_LABEL_W} y={12} fontSize="9" fill="var(--ink-soft)" className="mono uppercase tracking-[0.15em]">
           -60M
         </text>
-        <text x={ROW_LABEL_W + Math.floor(buckets / 2) * (CELL + GAP)} y={12} fontSize="9" fill="rgba(10, 10, 10, 0.55)" textAnchor="middle" className="mono uppercase tracking-[0.15em]">
+        <text x={ROW_LABEL_W + Math.floor(buckets / 2) * (CELL + GAP)} y={12} fontSize="9" fill="var(--ink-soft)" textAnchor="middle" className="mono uppercase tracking-[0.15em]">
           -30M
         </text>
-        <text x={ROW_LABEL_W + buckets * (CELL + GAP)} y={12} fontSize="9" fill="rgba(10, 10, 10, 0.55)" textAnchor="end" className="mono uppercase tracking-[0.15em]">
+        <text x={ROW_LABEL_W + buckets * (CELL + GAP)} y={12} fontSize="9" fill="var(--ink-soft)" textAnchor="end" className="mono uppercase tracking-[0.15em]">
           NOW
         </text>
 
@@ -94,14 +94,14 @@ export const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ cells, services, buc
                   width={CELL + 4}
                   height={CELL + 4}
                   fill="none"
-                  stroke="#0a0a0a"
+                  stroke="var(--ink)"
                   strokeWidth={2}
                 />
               );
             })}
             <g transform={`translate(${ROW_LABEL_W + 10}, ${height - 4})`}>
-              <rect x={-4} y={-14} width={190} height={16} fill="#f5f3ee" stroke="#0a0a0a" strokeWidth={2} />
-              <text x={2} y={-2} fontSize="9" fill="#0a0a0a" className="mono font-bold">
+              <rect x={-4} y={-14} width={190} height={16} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
+              <text x={2} y={-2} fontSize="9" fill="var(--ink)" className="mono font-bold">
                 {hover.service} · -{hover.bucket}m · {hoveredErrors} ERRORS
               </text>
             </g>

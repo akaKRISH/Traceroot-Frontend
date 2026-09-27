@@ -37,7 +37,7 @@ export const GitChangesCard: React.FC<GitChangesCardProps> = ({ gitChanges }) =>
                 {commit.message}
               </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="px-1.5 py-0.5 border border-ink mono label text-ink font-bold bg-white">
+                <span className="px-1.5 py-0.5 border border-ink mono label text-ink font-bold bg-panel">
                   {commit.shortHash}
                 </span>
                 <span className="label text-muted">

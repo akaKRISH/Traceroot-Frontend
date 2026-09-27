@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavigate }) => {
               className={`w-full flex items-center gap-3 px-3 py-2.5 t-body font-bold text-left transition-none border-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${
                 isActive
                   ? "bg-ink text-paper border-ink shadow-brut"
-                  : "bg-transparent text-ink border-transparent hover:bg-white hover:border-ink hover:shadow-brut"
+                  : "bg-transparent text-ink border-transparent hover:bg-ink/[0.08] hover:border-ink hover:shadow-brut"
               }`}
             >
               <Icon

@@ -343,7 +343,7 @@ const DashboardBody: React.FC<BodyProps> = ({
               key={incident.id}
               type="button"
               onClick={() => onSelectIncident(incident.id)}
-              className={`w-full text-left grid grid-cols-[88px_1fr_160px_140px_120px_100px] items-center px-4 py-3.5 bg-paper border-b border-grid last:border-b-0 transition-none hover:bg-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brut active:translate-x-[4px] active:translate-y-[4px] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+              className={`w-full text-left grid grid-cols-[88px_1fr_160px_140px_120px_100px] items-center px-4 py-3.5 bg-paper border-b border-grid last:border-b-0 transition-none hover:bg-ink/[0.08] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brut active:translate-x-[4px] active:translate-y-[4px] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                 freshIds.has(incident.id) ? "border-l-4 border-l-danger" : ""
               }`}
             >

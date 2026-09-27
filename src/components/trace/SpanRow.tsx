@@ -35,10 +35,10 @@ export const SpanRow: React.FC<SpanRowProps> = ({
       className={cn(
         "w-full text-left flex items-stretch transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
         selected
-          ? "bg-white border-l-4 border-l-ink"
+          ? "bg-ink/[0.12] border-l-4 border-l-ink"
           : active
-            ? "bg-ink/[0.06] border-l-4 border-l-transparent hover:bg-white"
-            : "bg-paper border-l-4 border-l-transparent hover:bg-white"
+            ? "bg-ink/[0.06] border-l-4 border-l-transparent hover:bg-ink/[0.08]"
+            : "bg-paper border-l-4 border-l-transparent hover:bg-ink/[0.08]"
       )}
     >
       {/* Left column: indented operation + service */}
@@ -62,7 +62,7 @@ export const SpanRow: React.FC<SpanRowProps> = ({
           />
           {/* duration bar */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-[12px] border border-ink"
+            className="absolute top-1/2 -translate-y-1/2 h-[12px] border border-ink/10"
             style={{ left: `${leftPct}%`, width: `${widthPct}%`, background: barColor }}
             title={`${formatDuration(span.durationMs)} @ +${span.startMs}ms`}
           />
