@@ -12,6 +12,8 @@ import { IncidentView } from "./pages/IncidentView";
 import { TraceExplorer } from "./pages/TraceExplorer";
 import { ServiceMap } from "./pages/ServiceMap";
 import { fetchIncidents } from "./lib/api";
+import { AuthSession } from "./lib/auth";
+import { AuthPage } from "./pages/AuthPage";
 
 type View =
   | { type: "live" }
@@ -34,7 +36,19 @@ const TITLES: Record<View["type"], { title: string; subtitle: string; section: s
 const RAIL_VIEWS: ReadonlySet<View["type"]> = new Set(["live", "incident", "traces", "services"]);
 
 export const App: React.FC = () => {
+  const [session, setSession] = useState<AuthSession | null>(() => {
+    const saved = localStorage.getItem("traceroot.session");
+    if (!saved) return null;
+    try {
+      return JSON.parse(saved) as AuthSession;
+    } catch {
+      localStorage.removeItem("traceroot.session");
+      return null;
+    }
+  });
   const [view, setView] = useState<View>({ type: "live" });
+
+  if (session) return <AuthPage onAuthenticated={setSession} />;
 
   const navKey = view.type === "incident" ? "incidents" : view.type;
   const meta = TITLES[view.type];
