@@ -19,9 +19,10 @@ export class AuthError extends Error {
 }
 
 async function request(path: string, body: Record<string, string>): Promise<AuthSession> {
-  const response = await fetch(`${API_BASE}${path}`, {
+   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
 

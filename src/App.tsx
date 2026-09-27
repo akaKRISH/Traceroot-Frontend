@@ -48,7 +48,7 @@ export const App: React.FC = () => {
   });
   const [view, setView] = useState<View>({ type: "live" });
 
-  if (session) return <AuthPage onAuthenticated={setSession} />;
+  if (!session) return <AuthPage onAuthenticated={setSession} />;
 
   const navKey = view.type === "incident" ? "incidents" : view.type;
   const meta = TITLES[view.type];
