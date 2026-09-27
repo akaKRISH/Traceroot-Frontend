@@ -105,6 +105,7 @@ export const TraceWaterfall: React.FC<TraceWaterfallProps> = ({
           />
         );
       })}
+      <div style={{ height: 500, pointerEvents: 'none' }} />
 
       {/* Playhead: 2px ink line spanning the bar area + hard time label */}
       <div ref={barAreaRef} className="absolute top-0 bottom-0 right-0 pointer-events-none" style={{ left: LABEL_COL }}>

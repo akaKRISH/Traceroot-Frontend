@@ -46,7 +46,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div style={{ minWidth: width, width: width ?? "100%", position: "relative" }}>
+      <div style={{ minWidth: width, width: width ?? "100%", position: "relative", minHeight: 420 }}>
         {rows.map((row) => (
           <div key={row.depth} style={{ height: ROW_H, position: "relative" }} className="w-full">
             {row.spans.map((s) => {

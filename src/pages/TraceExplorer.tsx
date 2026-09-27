@@ -98,10 +98,10 @@ const Body: React.FC<BodyProps> = ({ trace, incidents, spanId, onSelectSpan, onV
 
       {/* Center: flame graph + waterfall */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="h-[40%] flex flex-col min-h-[220px]">
+        <div className="h-[40%] flex flex-col min-h-[420px]">
           <Panel
             title={`FLAME GRAPH · ${trace.id}`}
-            className="border-0 shadow-none flex-1 flex flex-col min-h-0"
+            className="border-0 shadow-none flex-1 flex flex-col"
             bodyClassName="flex-1 overflow-auto p-3"
             brackets
             right={
@@ -116,10 +116,10 @@ const Body: React.FC<BodyProps> = ({ trace, incidents, spanId, onSelectSpan, onV
 
         <SectionDivider name="WATERFALL" />
 
-        <div className="h-[60%] flex flex-col min-h-0">
+        <div className="h-[60%] flex flex-col min-h-[500px]">
           <Panel
             title="WATERFALL"
-            className="border-0 shadow-none flex-1 flex flex-col min-h-0"
+            className="border-0 shadow-none flex-1 flex flex-col"
             bodyClassName="flex-1 overflow-auto"
             brackets
           >
